@@ -135,3 +135,37 @@ data_2014.take(10)
 
 data_filtered = data_from_file_conv.filter(lambda row: row[5]=='F' and row[21]=='0')
 data_filtered.count()
+
+data_2014_flat = data_from_file_conv.flatMap(lambda row: (row[16], int(row[16])+1))
+
+data_2014_flat.take(10)
+
+data_gender = data_from_file_conv.map(lambda row: row[5]).distinct()
+data_gender.take(10)
+
+fraction = 0.1
+data_sample = data_from_file_conv.sample(False, fraction, 42)
+
+print('Original dataset: {0},\n sample: {1}'.format(
+    data_from_file_conv.count(), data_sample.count()))
+
+rdd1 = sc.parallelize([('a', 1), ('b', 4), ('c',10)])
+rdd2 = sc.parallelize([('a', 4), ('a', 1), ('b', '6'), ('d', 15)])
+
+rdd3 = rdd1.leftOuterJoin(rdd2)
+rdd3.collect()
+
+rdd4 = rdd1.join(rdd2)
+rdd4.collect()
+
+rdd5 = rdd1.intersection(rdd2)
+rdd5.collect()
+
+rdd1 = rdd1.repartition(4)
+len(rdd1.glom().collect())
+
+data_first = data_from_file_conv.take(1)
+
+data_take_sampled = data_from_file_conv.takeSample(False, 1, 42)
+data_take_sampled
+
