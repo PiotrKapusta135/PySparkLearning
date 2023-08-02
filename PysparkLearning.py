@@ -169,3 +169,4 @@ data_first = data_from_file_conv.take(1)
 data_take_sampled = data_from_file_conv.takeSample(False, 1, 42)
 data_take_sampled
 
+rdd1.map(lambda row: row[1]).reduce(lambda x, y: x + y)
