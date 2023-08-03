@@ -2,6 +2,9 @@ from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.appName("Spark Learning").getOrCreate()
 
+###############################################################################
+# RDD                                                                         #
+###############################################################################
 df = spark.read.format('com.databricks.spark.csv').\
     options(header=True,
     inferschema='true').\
@@ -170,3 +173,46 @@ data_take_sampled = data_from_file_conv.takeSample(False, 1, 42)
 data_take_sampled
 
 rdd1.map(lambda row: row[1]).reduce(lambda x, y: x + y)
+
+data_reduce = sc.parallelize([1, 2, .5, .1, 5, .2], 1)
+
+works = data_reduce.reduce(lambda x, y: x / y)
+
+data_reduce = sc.parallelize([1, 2, .5, .1, 5, .2], 3)
+data_reduce.reduce(lambda x, y: x/y)
+
+
+data_key = sc.parallelize(
+    [('a', 4),('b', 3),('c', 2),('a', 8),('d', 2),('b', 1),
+     ('d', 3)], 4)
+
+data_key.reduceByKey(lambda x, y: x + y).collect()
+
+data_reduce.count()
+
+data_key.countByKey().items()
+
+data_key.saveAsTextFile('/home/piotrek/Projects/Spark/Spark/data_key.txt')
+
+def parse_input(row):
+    import re
+    pattern = re.compile(r'\(\'([a-z])\', ([0-9])\)')
+    row_split = pattern.split(row)
+    return (row_split[1], int(row_split[2]))
+
+data_key_rereaded = sc\
+    .textFile('/home/piotrek/Projects/Spark/Spark/data_key.txt')\
+    .map(parse_input)
+
+data_key_rereaded.collect()
+
+def f(x):
+    print(x)
+    
+data_key.foreach(f)
+
+###############################################################################
+# Dataframes                                                                         #
+###############################################################################
+
+
