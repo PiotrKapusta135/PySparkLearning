@@ -215,4 +215,33 @@ data_key.foreach(f)
 # Dataframes                                                                         #
 ###############################################################################
 
+stringJSONRDD = sc.parallelize(("""
+{ "id": "123",
+"name": "Katie",
+"age": 19,
+"eyeColor": "brown"
+}""",
+"""{
+"id": "234",
+"name": "Michael",
+"age": 22,
+"eyeColor": "green"
+}""",
+"""{
+"id": "345",
+"name": "Simone",
+"age": 23,
+"eyeColor": "blue"
+}""")
+)
 
+stringJSONRDD.take(5)
+
+swimmersJSON = spark.read.json(stringJSONRDD)
+
+swimmersJSON.show()
+
+swimmersJSON.createOrReplaceTempView("swimmersJSON")
+
+spark.sql('select * from swimmersJSON').collect()
+spark.sql('select * from swimmersJSON').show()
