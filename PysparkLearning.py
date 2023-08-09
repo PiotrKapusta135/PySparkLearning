@@ -1,5 +1,7 @@
 from pyspark.sql import SparkSession
 
+from pyspark.sql.types import *
+
 spark = SparkSession.builder.appName("Spark Learning").getOrCreate()
 
 ###############################################################################
@@ -245,3 +247,41 @@ swimmersJSON.createOrReplaceTempView("swimmersJSON")
 
 spark.sql('select * from swimmersJSON').collect()
 spark.sql('select * from swimmersJSON').show()
+
+swimmersJSON.printSchema()
+
+stringCSVRDD = sc.parallelize([
+    (123, 'Katie', 19, 'brown'),
+    (234, 'Michael', 22, 'green'),
+    (345, 'Simone', 23, 'blue')])
+
+schema = StructType([
+    StructField("id", LongType(), True),
+    StructField('name', StringType(), True),
+    StructField('age', LongType(), True),
+    StructField('eyeColor', StringType(), True)])
+
+swimmers = spark.createDataFrame(stringCSVRDD, schema)
+swimmers.createOrReplaceTempView('swimmers')
+
+swimmers.printSchema()
+
+swimmers.count()
+
+swimmers.select('id', 'age').filter('age = 22').show()
+swimmers.select(swimmers.id, swimmers.age).filter(swimmers.age==22).show()
+
+swimmers.select('name', 'eyeColor').filter("eyeColor like 'b%'").show()
+
+spark.sql('select count(1) from swimmers').show()
+
+spark.sql('select id, age from swimmers where age = 22').show()
+
+spark.sql(
+    'select name, eyeColor from swimmers where eyeColor like "b%"').show()
+
+flightPerfFilePath = '/home/piotrek/Downloads/departuredelays.csv'
+airportsFilePath = '/home/piotrek/Downloads/airport-codes-na.txt'
+
+airports = spark.read.csv(airportsFilePath, header='true', inferSchema='true', sep='\t')
+airports.createOrReplaceTempView('airports')
