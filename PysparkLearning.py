@@ -285,3 +285,21 @@ airportsFilePath = '/home/piotrek/Downloads/airport-codes-na.txt'
 
 airports = spark.read.csv(airportsFilePath, header='true', inferSchema='true', sep='\t')
 airports.createOrReplaceTempView('airports')
+
+flightPerf = spark.read.csv(flightPerfFilePath, header='true')
+flightPerf.createOrReplaceTempView('FlightPerformance')
+
+flightPerf.cache()
+
+spark.sql('''
+          select 
+          a.City, 
+          f.origin,
+          sum(f.delay) as Delays
+          from flightperformance f
+          join airports a on f.origin = a.IATA
+          where a.State = 'WA'
+          group by a.City, f.origin
+          order by sum(f.delay) desc
+          '''
+          ).show()
