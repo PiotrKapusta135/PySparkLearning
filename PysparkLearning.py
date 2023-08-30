@@ -2,6 +2,8 @@ from pyspark.sql import SparkSession
 
 from pyspark.sql.types import *
 
+import pyspark.sql.functions as fn
+
 spark = SparkSession.builder.appName("Spark Learning").getOrCreate()
 
 ###############################################################################
@@ -330,3 +332,43 @@ print('Count of distinct ids: {0}'.format(
     df.select([c for c in df.columns if c!= 'id']).distinct().count()))
 
 df = df.dropDuplicates(subset= [c for c in df.columns if c!= 'id'])
+
+df.agg(
+       fn.count('id').alias('count'),
+       fn.countDistinct('id').alias('distinct')
+       ).show()
+
+df.withColumn('new_id', fn.monotonically_increasing_id()).show()
+
+
+df_miss = spark.createDataFrame([
+            (1, 143.5, 5.6, 28,
+            'M', 100000),
+            (2, 167.2, 5.4, 45,
+            'M', None),
+            (3, None , 5.2, None, None, None),
+            (4, 144.5, 5.9, 33,
+            'M', None),
+            (5, 133.2, 5.7, 54,
+            'F', None),
+            (6, 124.1, 5.2, None, 'F', None),
+            (7, 129.2, 5.3, 42,
+            'M', 76000),
+            ], ['id', 'weight', 'height', 'age', 'gender', 'income'])
+
+df_miss.show()
+
+df_miss.rdd.map(lambda row: (row['id'], sum([c==None for c in row]))).collect()
+
+df_miss.where('id == 3').show()
+
+df_miss.agg(*[
+    (1- (fn.count(c) / fn.count('*')))\
+    .alias(c + ' missing') for c in df_miss.columns])\
+    .show()
+
+df_miss_no_income = df_miss.select([ c for c in df_miss.columns if c!= 'income'])
+
+df_miss_no_income.show()
+
+# df_miss_no_income.dropna(thresh=3).show()
