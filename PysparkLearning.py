@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 
-from pyspark.sql.types import *
+import pyspark.sql.types as typ
 
 import pyspark.sql.functions as fn
 
@@ -417,3 +417,41 @@ df_outliers = df_outliers.join(outliers, on='id')
 df_outliers.show()
 df_outliers.filter('weight_o').select('id', 'weight').show()
 df_outliers.filter('age_o').select('id', 'age').show()
+
+
+
+fraud = sc.textFile('/home/piotrek/Projects/Spark/Spark datasets/ccFraud.csv.gz')
+header = fraud.first()
+
+fraud = fraud \
+    .filter(lambda row: row != header)\
+    .map(lambda row: [int(elem) for elem in row.splot(',')])
+    
+fields = [
+    *[
+      typ.StructField(h[1:-1], typ.IntegerType(), True) for h in header.split(',')
+      ]
+    ]
+schema = typ.StructType(fields)
+fraud_df = spark.createDataFrame(fraud, schema)
+
+fraud_df.printSchema()
+
+fraud_df.groupBy('gender').count().show()
+
+numerical = ['balance', 'numTrans', 'numIntlTrans']
+desc = fraud_df.describe(numerical)
+desc.show()
+
+fraud_df.agg({'balance':'skewness'}).show()
+
+fraud_df.corr('balance', 'numTrans')
+
+n_numerical = len(numerical)
+corr = []
+for i in range(0, n_numerical):
+    temp = [None] * 1
+    
+    for j in range(i, n_numerical):
+        temp.append(fraud_df.corr(numerical[i], numerical[j]))
+        corr.append(temp)
