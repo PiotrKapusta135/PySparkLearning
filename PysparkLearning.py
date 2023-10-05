@@ -4,6 +4,11 @@ import pyspark.sql.types as typ
 
 import pyspark.sql.functions as fn
 
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+import bokeh.plotting as chrt
+
+
 spark = SparkSession.builder.appName("Spark Learning").getOrCreate()
 
 ###############################################################################
@@ -425,7 +430,7 @@ header = fraud.first()
 
 fraud = fraud \
     .filter(lambda row: row != header)\
-    .map(lambda row: [int(elem) for elem in row.splot(',')])
+    .map(lambda row: [int(elem) for elem in row.split(',')])
     
 fields = [
     *[
@@ -438,6 +443,7 @@ fraud_df = spark.createDataFrame(fraud, schema)
 fraud_df.printSchema()
 
 fraud_df.groupBy('gender').count().show()
+
 
 numerical = ['balance', 'numTrans', 'numIntlTrans']
 desc = fraud_df.describe(numerical)
@@ -455,3 +461,15 @@ for i in range(0, n_numerical):
     for j in range(i, n_numerical):
         temp.append(fraud_df.corr(numerical[i], numerical[j]))
         corr.append(temp)
+    
+hists = fraud_df.select('balance').rdd.flatMap(
+    lambda row: row)\
+    .histogram(20)
+    
+data = {
+        'bins':hists[0][:-1],
+        'freq':hists[1]}
+plt.bar(data['bins'], data['freq'], width=2000)
+plt.title('Histogram of \'balance\'')
+
+b_hist = chrt.
